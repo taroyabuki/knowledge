@@ -14,7 +14,7 @@ docker run --rm curlimages/curl curl -s http://example.net
 
 参考資料：https://neo4j.com/docs/operations-manual/current/docker/
 
-ユーザ名：neo4j，パスワード：yoloのコンテナを構築する。
+ユーザ名：neo4j，パスワード：yoloのコンテナを構築する。`graph-data-science`は6章で使う。
 
 ```bash
 docker run \
@@ -226,7 +226,7 @@ mvn exec:java -Dexec.mainClass="com.example.JavaDriverExample"
 
 ## 6 データサイエンスによる知識グラフ拡充
 
-次を実行する。
+次を実行する（まとめて実行するなら「`;`」が必要）。
 
 ```
 CALL gds.graph.project.cypher(
