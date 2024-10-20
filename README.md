@@ -162,38 +162,7 @@ mvn archetype:generate -DgroupId=com.example -DartifactId=neo4j-example -Darchet
         ├── ...
 ```
 
-neo4j-example/pom.xmlを次のように修正する。
-
-```xml
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>com.example</groupId>
-  <artifactId>neo4j-example</artifactId>
-  <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
-  </properties>
-  <name>neo4j-example</name>
-  <url>http://maven.apache.org</url>
-  <dependencies>
-    <dependency>
-      <groupId>org.neo4j.driver</groupId>
-      <artifactId>neo4j-java-driver</artifactId>
-      <version>4.4.0</version>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-</project>
-```
+neo4j-example/pom.xmlを[pom.xml](pom.xml)のように修正する。
 
 #### hello, world
 
@@ -214,78 +183,7 @@ mvn exec:java -Dexec.mainClass="com.example.App"
 - 構文エラーがある。（「`- >`」は正しくは「`->`」）
 - メソッド`findFriends`が終了した時点でセッションが終了するため，戻り値の`result`は使えない。
 
-AIにコードとエラーメッセージを与えて解決した結果は次のとおり。これをneo4j
-
-```java
-package com.example;
-
-import static org.neo4j.driver.Values.parameters;
-
-import org.neo4j.driver.AuthTokens;
-import org.neo4j.driver.Driver;
-import org.neo4j.driver.GraphDatabase;
-import org.neo4j.driver.Session;
-import org.neo4j.driver.Record;
-import org.neo4j.driver.exceptions.Neo4jException;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class JavaDriverExample implements AutoCloseable {
-
-  private final Driver driver;
-
-  public JavaDriverExample(String uri, String user, String password) {
-    driver = GraphDatabase.driver(uri, AuthTokens.basic(user, password));
-  }
-
-  @Override
-  public void close() {
-    driver.close();
-  }
-
-  public List<String> findFriends(final String name) {
-    List<String> friends = new ArrayList<>();
-
-    try (Session session = driver.session()) {
-      session.readTransaction(tx -> {
-        var result = tx.run(
-            "MATCH (a:Person)-[:FRIEND]->(b:Person) "
-            + "WHERE a.name = $name "
-            + "RETURN b.name",
-            parameters("name", name)
-        );
-
-        // 結果をセッション内で処理してリストに格納
-        while (result.hasNext()) {
-          Record record = result.next();
-          friends.add(record.get("b.name").asString());
-        }
-
-        return friends; // 結果をリターン
-      });
-    } catch (Neo4jException e) {
-      System.err.println("Error querying the database: " + e.getMessage());
-      throw e;
-    }
-
-    return friends;
-  }
-
-  public static void main(String... args) {
-    try (JavaDriverExample example = new JavaDriverExample("bolt://localhost:7687", "neo4j", "yolo")) {
-      List<String> friends = example.findFriends("Rosa");
-
-      // 結果の表示
-      for (String friend : friends) {
-        System.out.println(friend);
-      }
-    } catch (Exception e) {
-      System.err.println("Error running the example: " + e.getMessage());
-    }
-  }
-}
-```
+AIにコードとエラーメッセージを与えて解決した結果が[JavaDriverExample.java](JavaDriverExample.java)。これをneo4j-example/main/java/com/exampleに置く。
 
 ビルド，実行して，Rosaの友人つまりKarlが表示されればよい。
 
