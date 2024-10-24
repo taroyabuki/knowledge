@@ -26,13 +26,13 @@ docker run \
     neo4j:4.4
 ```
 
-データを永続化したい場合は，フォルダdataを作って，`-v "$(pwd)/data":/data`などとするのだろうが，まずは，永続化しないて試す。
+データを永続化したい場合は，フォルダdataを作って，`-v "$(pwd)/data":/data`などとするのだろうが，まずは，永続化しないで試す。
 
-補足：やり直す場合は次のとおり。Docker desktopのGUIで削除してもよい。
+補足：コンテナの管理はDocker desktopのGUIでもできるが，CUIなら次のとおり。
 
-```bash
-docker rm -f neo4j
-```
+- 終了する場合：Ctrl-C
+- 再開する場合：`docker start neo4j`
+- 削除する場合：`docker rm -f neo4j`
 
 コンテナを構築したら，http://localhost:7474/ にアクセスする（ユーザ名：neo4j，パスワード：yolo）。
 
@@ -83,7 +83,7 @@ MERGE (karl) -[:FRIEND]-> (rosa)
 MATCH (n) RETURN (n)
 ```
 
-補足：削除するなら次のとおり。
+補足：削除は次のとおり。
 
 ```cypher
 MATCH () -[r:LIVES_IN]-> () DELETE r;
@@ -156,73 +156,7 @@ sh chapter4/4-22.sh
 
 ## 5 知識グラフの組み込み
 
-### Javaのドライバ
-
-あえてJavaを試す必要はないが，動かしてみるのも経験にはなるか。
-
-```bash
-apt install maven -y
-```
-
-プロジェクトを作る。
-
-```bash
-mvn archetype:generate -DgroupId=com.example -DartifactId=neo4j-example -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-```
-
-この段階で，フォルダ構造は次のようになっている。
-
-```
-.
-├── book-building-knowledge-graphs-ja ← サンプルコード
-│   └── example
-│       ├── chapter3
-│       ├── chapter4
-│       ├── chapter5
-│       └── ...
-└── neo4j-example ← ここで作業する。pom.xmlを編集する。
-    ├── src
-    │   ├── main
-    │   │   └── java
-    │   │       └── com
-    │   │           └── example ← JavaDriverExample.javaを置く
-    │   └── test
-    │       └── java
-    │           └── com
-    │               └── example
-    └── target
-        ├── ...
-```
-
-neo4j-example/pom.xmlを[pom.xml](pom.xml)のように修正する。
-
-#### hello, world
-
-プロジェクト内に移動して，ビルド，実行。
-
-```bash
-cd cd neo4j-example
-mvn clean package
-mvn exec:java -Dexec.mainClass="com.example.App"
-```
-
-「Hello World!」と表示されればよい。
-
-#### リスト5-1
-
-リスト5-1（book-building-knowledge-graphs-ja/example/chapter5/5-1.java）には次の問題がある。
-
-- 構文エラーがある。（「`- >`」は正しくは「`->`」）
-- メソッド`findFriends`が終了した時点でセッションが終了するため，戻り値の`result`は使えない。
-
-AIにコードとエラーメッセージを与えて解決した結果が[JavaDriverExample.java](JavaDriverExample.java)。これをneo4j-example/main/java/com/exampleに置く。
-
-ビルド，実行して，Rosaの友人つまりKarlが表示されればよい。
-
-```bash
-mvn clean package
-mvn exec:java -Dexec.mainClass="com.example.JavaDriverExample"
-```
+[Javaのドライバ](java)
 
 ## 6 データサイエンスによる知識グラフ拡充
 
