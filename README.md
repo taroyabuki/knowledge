@@ -160,6 +160,19 @@ cd
 git clone https://github.com/jbarrasa/gc-2022.git
 ```
 
+想定するディレクトリ構造は次のとおり。
+
+```
+.
+├── book-building-knowledge-graphs-ja
+│   └── example
+└── gc-2022
+    ├── guides
+    ├── interop
+    ├── search
+    └── validation
+```
+
 LOAD CSVの対象のファイル，nr-stations-all.csvとnr-station-links.csvを/var/lib/neo4j/importにコピーする。
 
 ```bash
@@ -178,7 +191,7 @@ sed -i 's@nr@file:///nr@' 6-2.py
 ```bash
 python 6-2.py # データを読み込む。
 python 6-3.py # 射影を作成する。
-python 6-4.py #バーミンガム・ニューストリート駅とエディンバラ鋭気の最短経路を計算する。
+python 6-4.py # バーミンガム・ニューストリート駅とエディンバラ鋭気の最短経路を計算する。
 ```
 
 実行結果は295.91。書籍（298.0）と異なるから，別の方法で計算してみる。
@@ -205,4 +218,41 @@ pip install networkx pandas
 wget https://raw.githubusercontent.com/taroyabuki/knowledge/refs/heads/main/6-4_check.py
 python 6-4_check.py
 ```
-結果は295.91。
+結果はやはり295.91。
+
+図6-4の再現方法がわからないから，次のプロンプトでClaudeに書いてもらう。
+
+```
+次のように読み込んでできるグラフの，BHMとEDBの最短経路を，Neo4j Browserで可視化するCypher
+
+from graphdatascience import GraphDataScience
+
+# データベースに接続
+host = "bolt://127.0.0.1:7687"
+user = "neo4j"
+password = "yolo"
+gds = GraphDataScience(host, auth=(user, password), database="neo4j")
+
+# 駅の間の線路をリレーションとして読み込む
+gds.run_cypher(
+    """\
+LOAD CSV WITH HEADERS FROM 'file:///nr-station-links.csv' AS track
+MATCH (from:Station {crs: track.from})
+MATCH (to:Station {crs: track.to})
+MERGE (from)-[:TRACK {distance: round(toFloat(track.distance), 2 )}]->(to)
+"""
+)
+gds.close()
+```
+
+生成されたCypherは次のとおり。
+
+```cypher
+// 最短経路を見つけて可視化
+MATCH path = shortestPath(
+  (start:Station {crs: 'BHM'})-[:TRACK*]-(end:Station {crs: 'EDB'})
+)
+WITH path, reduce(d = 0, r in relationships(path) | d + r.distance) as distance
+RETURN path,
+       distance as totalDistance
+```
