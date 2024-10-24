@@ -2,45 +2,49 @@
 
 ## 準備
 
+VS Codeをインストールする。
+
+```bash
+winget install Microsoft.VisualStudioCode
+```
+
+VS Codeの拡張機能Remote Developmentをインストールする（Dev containerだけでもいいかも）。これがあると，コンテナ内での作業をVS Codeで行える。
+
 ### コンテナ構築
 
-Dockerの動作確認
+Dockerをインストールする。参考：https://qiita.com/zembutsu/items/a98f6f25ef47c04893b3
+
+コンテナを構築できること，コンテナからのWebにアクセスできることを確認する。
 
 ```bash
 docker run --rm curlimages/curl curl -s http://example.net
 ```
 
-コンテナを構築できること，コンテナからのWebにアクセスできることを確認してから先に進む。
+**ここでエラーが出る場合は先に進めない。**
 
-参考資料：https://neo4j.com/docs/operations-manual/current/docker/
+「docker neo4j」で検索すると，[neo4jのオフィシャルイメージ](https://hub.docker.com/_/neo4j/)が見つかる。この先ではこれを使う。参考資料：https://neo4j.com/docs/operations-manual/current/docker/
 
 ユーザ名：neo4j，パスワード：yoloのコンテナを構築する。`graph-data-science`は6章で使う。
 
+コンテナを構築する。
+
 ```bash
-docker run \
-    --name neo4j \
-    -p 7474:7474 -p 7687:7687 \
-    -e NEO4J_AUTH=neo4j/yolo \
-    -e NEO4JLABS_PLUGINS='["graph-data-science"]' \
-    -e NEO4J_ACCEPT_LICENSE_AGREEMENT=yes \
-    neo4j:4.4
+docker run --name neo4j -d -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/yolo -e NEO4JLABS_PLUGINS="[\"graph-data-science\"]" -e NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j:4.4
 ```
 
 データを永続化したい場合は，フォルダdataを作って，`-v "$(pwd)/data":/data`などとするのだろうが，まずは，永続化しないで試す。
 
 補足：コンテナの管理はDocker desktopのGUIでもできるが，CUIなら次のとおり。
 
-- 終了する場合：Ctrl-C
-- 再開する場合：`docker start neo4j`
-- 削除する場合：`docker rm -f neo4j`
+- 停止：`docker stop neo4j`
+- 再開：`docker start neo4j`
+- 削除：`docker rm -f neo4j`
 
 コンテナを構築したら，http://localhost:7474/ にアクセスする（ユーザ名：neo4j，パスワード：yolo）。
 
 ### コンテナへの接続 
 
-VS Codeで，拡張機能Remote Developmentをインストールする（Dev containerだけでもいいかも）。
-
-VS Codeで，コンテナneo4jにアタッチする。
+VS Codeで，コンテナneo4jにアタッチする。（やり方はウェブで探す。）
 
 Ctrl+@でターミナルを開く。以下，コマンドはこのターミナルで実行する。
 
@@ -48,13 +52,14 @@ Ctrl+@でターミナルを開く。以下，コマンドはこのターミナ�
 
 Gitをインストールする。
 
-```
+```bash
 apt update && apt install git -y
 ```
 
 サンプルコードをダウンロードする。
 
-```
+```bash
+cd
 git clone https://github.com/sakusaku-rich/book-building-knowledge-graphs-ja.git
 ```
 
@@ -86,83 +91,25 @@ MATCH (n) RETURN (n)
 補足：削除は次のとおり。
 
 ```cypher
-MATCH () -[r:LIVES_IN]-> () DELETE r;
-MATCH () -[r:FRIEND]-> () DELETE r;
-MATCH (n) DELETE n;
-MATCH (n) DETACH DELETE n;
+MATCH (n)
+DETACH DELETE n
 ```
 
 ## 4 知識グラフデータの読み込み
 
-### 4. 2 LOAD CSV
-
-CSVファイルを/var/lib/neo4j/import/に置く。（教科書に書いてない？）
-
-```bash
-cd
-cp book-building-knowledge-graphs-ja/example/chapter4/4-5.csv /var/lib/neo4j/import/places.csv
-cp book-building-knowledge-graphs-ja/example/chapter4/4-7.csv /var/lib/neo4j/import/people.csv
-cp book-building-knowledge-graphs-ja/example/chapter4/4-9.csv /var/lib/neo4j/import/friend_rels.csv
-cp book-building-knowledge-graphs-ja/example/chapter4/4-11.csv /var/lib/neo4j/import/lives_in.csv
-```
-
-ターミナルでCypher Shellを起動する。（ブラウザでも実行してもよい。）
-
-```bash
-cypher-shell -uneo4j -pyolo
-#ファイルに書いておいて
-#cypher-shell -uneo4j -pyolo < ファイル
-#として実行することもできる。
-```
-
-リスト4-6, 4-8, 4-10, 4-12を修正して実行する（複数まとめる場合は「`;`」が必要）。
-
-```cypher
-LOAD CSV WITH HEADERS FROM 'file:///places.csv' AS line
-MERGE (:Place { country: line.country, city: line.city });
-
-LOAD CSV WITH HEADERS FROM 'file:///people.csv' AS line
-MERGE (p:Person { name: line.name })
-SET p.age = line.age
-SET p.gender = line.gender;
-
-LOAD CSV WITH HEADERS FROM 'file:///friend_rels.csv' AS line
-MATCH (p1:Person {name: line.from})
-MATCH (p2:Person {name: line.to})
-MERGE (p1)-[:FRIEND]->(p2);
-
-LOAD CSV WITH HEADERS FROM 'file:///lives_in.csv' AS line
-MATCH (person:Person {name: line.from})
-MATCH (place:Place {city: line.to})
-MERGE (person)-[r:LIVES_IN]->(place)
-SET r.since = line.since;
-
-:exit
-```
-
-### 4.3 neo4j-admin
-
-4.3節は，データベースを止める必要があるが，`neo4j stop`とするとコンテナが終了してしまう。Dockerではできない？　そもそも，Community Editionではデータベースを止められない？
-
-試す場合：
-
-```bash
-cd book-building-knowledge-graphs-ja/example
-
-sed -i 's/bin\///' chapter4/4-22.sh
-sed -i 's/import\//chapter4\//g' chapter4/4-22.sh
-sh chapter4/4-22.sh
-```
+上の作業でグラフができているなら飛ばしてよい→[データの読み込み](load.md)
 
 ## 5 知識グラフの組み込み
 
-[Javaのドライバ](java)
+必須ではないが，試したから残しておく→[Javaのドライバ](java)
 
 ## 6 データサイエンスによる知識グラフ拡充
 
-次を実行する（まとめて実行するなら「`;`」が必要）。
+### 6.3 Graph Data Scienceの活用
 
-```
+ブラウザで，次を実行する（まとめて実行するなら「`;`」が必要）。
+
+```cypher
 CALL gds.graph.project.cypher(
  'gds-example-graph',
  'MATCH (p:Person)
@@ -196,3 +143,66 @@ REMOVE n.betweennessCentrality
 ```
 CALL gds.graph.drop('gds-example-graph')
 ```
+
+### 6.4 グラフデータサイエンスと実験
+
+Pythonをインストールする。
+
+```bash
+apt install python3 python-is-python3 python3-pip -y
+pip install GraphDataScience
+```
+
+データを用意する。
+
+```bash
+cd
+git clone https://github.com/jbarrasa/gc-2022.git
+```
+
+LOAD CSVの対象のファイル，nr-stations-all.csvとnr-station-links.csvを/var/lib/neo4j/importにコピーする。
+
+```bash
+cp gc-2022/interop/data/* /var/lib/neo4j/import/
+```
+
+book-building-knowledge-graphs-ja/example/chapter6/6-2.pyを修正する（ファイル名の前に`file:///`を付ける）。
+
+```bash
+cd ~/book-building-knowledge-graphs-ja/example/chapter6
+sed -i 's@nr@file:///nr@' 6-2.py
+```
+
+リスト6-2から6-4を実行する。補足：6-3をやり直すときは，先に`CALL gds.graph.drop('trains')`を実行する。
+
+```bash
+python 6-2.py # データを読み込む。
+python 6-3.py # 射影を作成する。
+python 6-4.py #バーミンガム・ニューストリート駅とエディンバラ鋭気の最短経路を計算する。
+```
+
+実行結果は295.91。書籍（298.0）と異なるから，別の方法で計算してみる。
+
+次のプロンプトで，Claudeにコードを書いてもらう。（略称はnr-stations-all.csvで調べた。）
+
+```
+次のような内容のnr-station-links.csvがある。
+
+from,to,distance
+AAP,BOP,0.71
+AAP,HRN,0.93
+AAP,NSG,1.46
+AAT,ACN,6.48
+...
+
+このファイルを読み込んで，BHMとEDBの最短距離を求めるPythonのプログラム
+```
+
+できたコードが[6-4_check.py](6-4_check.py)，ファイル名だけ修正した。
+
+```bash
+pip install networkx pandas
+wget https://raw.githubusercontent.com/taroyabuki/knowledge/refs/heads/main/6-4_check.py
+python 6-4_check.py
+```
+結果は295.91。
