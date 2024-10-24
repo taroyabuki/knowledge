@@ -188,7 +188,7 @@ cd ~/book-building-knowledge-graphs-ja/example/chapter6
 sed -i 's@nr@file:///nr@' 6-2.py
 ```
 
-リスト6-2から6-4を実行する。補足：6-3をやり直すときは，先に`CALL gds.graph.drop('trains')`を実行する。
+リスト6-2から6-4を実行する。補足：6-3をやり直すときは，先にブラウザで`CALL gds.graph.drop('trains')`を実行する。
 
 ```bash
 python 6-2.py # データを読み込む。
