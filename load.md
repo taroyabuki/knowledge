@@ -6,10 +6,7 @@ CSVファイルを/var/lib/neo4j/import/に置く。（教科書に書いてな�
 
 ```bash
 cd
-cp book-building-knowledge-graphs-ja/example/chapter4/4-5.csv /var/lib/neo4j/import/places.csv
-cp book-building-knowledge-graphs-ja/example/chapter4/4-7.csv /var/lib/neo4j/import/people.csv
-cp book-building-knowledge-graphs-ja/example/chapter4/4-9.csv /var/lib/neo4j/import/friend_rels.csv
-cp book-building-knowledge-graphs-ja/example/chapter4/4-11.csv /var/lib/neo4j/import/lives_in.csv
+cp book-building-knowledge-graphs-ja/example/chapter4/*.csv /var/lib/neo4j/import/
 ```
 
 ターミナルでCypher Shellを起動する。（ブラウザでも実行してもよい。）
@@ -24,27 +21,27 @@ cypher-shell -uneo4j -pyolo
 リスト4-6, 4-8, 4-10, 4-12を修正して実行する（複数まとめる場合は「`;`」が必要）。
 
 ```cypher
-LOAD CSV WITH HEADERS FROM 'file:///places.csv' AS line
+LOAD CSV WITH HEADERS FROM 'file:///4-5.csv' AS line
 MERGE (:Place { country: line.country, city: line.city });
 
-LOAD CSV WITH HEADERS FROM 'file:///people.csv' AS line
+LOAD CSV WITH HEADERS FROM 'file:///4-7.csv' AS line
 MERGE (p:Person { name: line.name })
 SET p.age = line.age
 SET p.gender = line.gender;
 
-LOAD CSV WITH HEADERS FROM 'file:///friend_rels.csv' AS line
+LOAD CSV WITH HEADERS FROM 'file:///4-9.csv' AS line
 MATCH (p1:Person {name: line.from})
 MATCH (p2:Person {name: line.to})
 MERGE (p1)-[:FRIEND]->(p2);
 
-LOAD CSV WITH HEADERS FROM 'file:///lives_in.csv' AS line
+LOAD CSV WITH HEADERS FROM 'file:///4-11.csv' AS line
 MATCH (person:Person {name: line.from})
 MATCH (place:Place {city: line.to})
 MERGE (person)-[r:LIVES_IN]->(place)
 SET r.since = line.since;
-
-:exit
 ```
+
+`:exit`で終了する。
 
 ### 4.3 neo4j-admin
 
