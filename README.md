@@ -247,7 +247,7 @@ MERGE (from)-[:TRACK {distance: round(toFloat(track.distance), 2 )}]->(to)
 gds.close()
 ```
 
-生成されたCypherは次のとおり。
+生成されたCypherは次のとおり（ブラウザで動作確認済み）。
 
 ```cypher
 // 最短経路を見つけて可視化
