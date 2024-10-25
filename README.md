@@ -181,11 +181,12 @@ LOAD CSVの対象のファイル，nr-stations-all.csvとnr-station-links.csvを
 cp gc-2022/interop/data/* /var/lib/neo4j/import/
 ```
 
-book-building-knowledge-graphs-ja/example/chapter6/6-2.pyを修正する（ファイル名の前に`file:///`を付ける）。
+book-building-knowledge-graphs-ja/example/chapter6/6-2.pyを修正する（ファイル名の前に`file:///`を付ける。オリジナルが変更されている可能性もあるから，修正結果を確認すること）。
 
 ```bash
 cd ~/book-building-knowledge-graphs-ja/example/chapter6
 sed -i 's@nr@file:///nr@' 6-2.py
+cat 6-2.py
 ```
 
 リスト6-2から6-4を実行する。補足：6-3をやり直すときは，先にブラウザで`CALL gds.graph.drop('trains')`を実行する。
