@@ -24,15 +24,16 @@ docker run --rm curlimages/curl curl -s http://example.net
 
 「docker neo4j」で検索すると，[neo4jのオフィシャルイメージ](https://hub.docker.com/_/neo4j/)が見つかる。この先ではこれを使う。参考資料：https://neo4j.com/docs/operations-manual/current/docker/
 
-ユーザ名：neo4j，パスワード：yoloのコンテナを構築する。`graph-data-science`は6章で使う。
-
 コンテナを構築する。
 
 ```bash
-docker run --name neo4j -d -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/yolo -e NEO4JLABS_PLUGINS="[\"graph-data-science\"]" -e NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j:4.4
+docker run --name neo4j -d -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/yolo -e NEO4JLABS_PLUGINS="[\"graph-data-science\", \"apoc\"]" -e NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j:4.4
 ```
 
-データを永続化したい場合は，フォルダdataを作って，`-v "$(pwd)/data":/data`などとするのだろうが，まずは，永続化しないで試す。
+- ユーザ名：`neo4j`，パスワード：`yolo`である。Neo4jの5以降では，パスワードポリシーが変わって，4文字パスワードが使えない。本書ではパスワードを`yolo`にしている部分がたくさんあるため，ここではNeo4j 4.4を使う。表紙に「Neo4j 5対応」とあるのは，どういうことなのだろう。
+- プラグイン`graph-data-science`は6章で使う。
+- プラグイン`apoc`は9章で使う。
+- データを永続化したい場合は，フォルダdataを作って，`-v "$(pwd)/data":/data`などとするのだろうが，まずは，永続化しないで試す。
 
 補足：コンテナの管理はDocker desktopのGUIでもできるが，CUIなら次のとおり。
 
@@ -40,11 +41,11 @@ docker run --name neo4j -d -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/yolo -e
 - 再開：`docker start neo4j`
 - 削除：`docker rm -f neo4j`
 
-コンテナを構築したら，http://localhost:7474/ にアクセスする（ユーザ名：neo4j，パスワード：yolo）。
+コンテナを構築したら，http://localhost:7474/ にアクセスする（ユーザ名：`neo4j`，パスワード：`yolo`）。
 
 ### コンテナへの接続 
 
-VS Codeで，コンテナneo4jにアタッチする。（やり方はウェブで探す。）
+VS CodeのDev Containersで，コンテナneo4jにアタッチする。（やり方はウェブで探す。）
 
 Ctrl+@でターミナルを開く。以下，コマンドはこのターミナルで実行する。
 
@@ -55,7 +56,7 @@ Ctrl+@でターミナルを開く。以下，コマンドはこのターミナ�
 Gitをインストールする。
 
 ```bash
-apt update && apt install git -y
+apt update && apt install git unzip -y
 ```
 
 サンプルコードをダウンロードする。
@@ -65,41 +66,11 @@ cd
 git clone https://github.com/sakusaku-rich/book-building-knowledge-graphs-ja.git
 ```
 
-## 3 グラフデータベース
+## [3 グラフデータベース](ch03.md)
 
-ブラウザで次を実行する。
+## [4 知識グラフデータの読み込み](ch04.md)
 
-```cypher
-MERGE (london:Place {city: 'London', country: 'UK'})
-MERGE (fred:Person {name: 'Fred'})
-MERGE (fred) -[:LIVES_IN]-> (london)
-MERGE (karl:Person {name: 'Karl'})
-MERGE (karl) -[:LIVES_IN]-> (london)
-MERGE (berlin:Place {city: 'Berlin', country: 'DE'})
-MERGE (rosa:Person {name: 'Rosa'})
-MERGE (rosa) -[:LIVES_IN]-> (berlin)
-MERGE (fred) -[:FRIEND]-> (karl)
-MERGE (karl) -[:FRIEND]-> (fred)
-MERGE (rosa) -[:FRIEND]-> (karl)
-MERGE (karl) -[:FRIEND]-> (rosa)
-```
-
-結果の確認
-
-```cypher
-MATCH (n) RETURN (n)
-```
-
-補足：削除は次のとおり。
-
-```cypher
-MATCH (n)
-DETACH DELETE n
-```
-
-## 4 知識グラフデータの読み込み
-
-上の作業でグラフができているなら飛ばしてよい→[データの読み込み](ch04.md)
+第3章の作業でグラフができているなら飛ばしてよい．
 
 ## 5 知識グラフの組み込み
 
@@ -108,3 +79,5 @@ DETACH DELETE n
 ## [6 データサイエンスによる知識グラフ拡充](ch06.md)
 
 ## [7 グラフネイティブ機械学習](ch07.md)
+
+## [9 知識グラフと識別](ch09.md)
