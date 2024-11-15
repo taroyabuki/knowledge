@@ -39,13 +39,13 @@ docker run --name neo4j -d -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/yolo -e
 
 - 停止：`docker stop neo4j`
 - 再開：`docker start neo4j`
-- 削除：`docker rm -f neo4j`
+- 削除：`docker rm -f neo4j`**（よくわからなくなったら，削除してやり直すのが簡単）**
 
 コンテナを構築したら，http://localhost:7474/ にアクセスする（ユーザ名：`neo4j`，パスワード：`yolo`）。
 
 ### コンテナへの接続 
 
-VS CodeのDev Containersで，コンテナneo4jにアタッチする。（やり方はウェブで探す。）
+VS CodeのDev Containersでコンテナneo4jにアタッチする。（やり方はウェブで探す。）
 
 Ctrl+@でターミナルを開く。以下，コマンドはこのターミナルで実行する。
 
